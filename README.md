@@ -19,7 +19,6 @@ enhancing the user's chart navigation experience.
 
 - Dynamic Button Visibility: The "Scroll to Recent" button appears when you scroll back on the chart and disappears when you are at the most recent bar.
 - Convenient Navigation: One-click navigation to the most recent bar on the chart.
-- Customizable Appearance: The button's position, size, color, and font can be easily customized.
 
 ## Installation
 
@@ -158,7 +157,7 @@ void UpdateButtonVisibility()
    if(firstVisibleBarIndex == visibleBarsCount)
      {
       ObjectDelete(0, BUTTON_NAME);
-      Sleep(500);
+      Sleep(250);
      }
    else
      {
