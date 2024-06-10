@@ -1,6 +1,6 @@
-# MQL5 Scroll to Recent Button
+# Scroll_To_Recent
 
-This MQL5 script adds a dynamic button to the MetaTrader 5 chart, enabling users to quickly navigate to the most recent bar. 
+This dynamic Scroll to Recent button helps users to quickly navigate to the most recent bar. 
 The button is intelligently designed to appear when the chart is scrolled back and disappear when the chart is at the most recent bar, 
 enhancing the user's chart navigation experience.
 
@@ -9,7 +9,7 @@ enhancing the user's chart navigation experience.
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Input Parameters](#input-parameters)
+- [Inputs](#inputs)
 - [Customization](#customization)
 - [Script Code](#script-code)
 - [Contributing](#contributing)
@@ -17,18 +17,20 @@ enhancing the user's chart navigation experience.
 
 ## Features
 
-- Dynamic Button Visibility: The "Scroll to Recent" button appears when you scroll back on the chart and disappears when you are at the most recent bar.
-- Convenient Navigation: One-click navigation to the most recent bar on the chart.
+- Button appears when you scroll back on the chart and disappears when you are at the most recent bar.
+- Click the button to instantly scroll the chart to the most recent data.
+- Place the button on the chart where it is easily accessible.
+- Helps traders focus on the latest market developments and make timely decisions.
 
 ## Installation
 
-1. Download the Script: Download the ScrollToRecentButton.mq5 file from this repository.
+1. Download the Script: Download the Scroll_To_Recent.mq5 file from this repository.
 2. Open MetaTrader 5
    - Launch MetaTrader 5.
    - Go to `File` -> `Open Data Folder`.
 3. Place the Script
-   - Navigate to `MQL5` -> `Experts`.
-   - Copy the `ScrollToRecentButton.mq5` file into the Experts folder.
+   - Navigate to `MQL5` -> `Indicators`.
+   - Copy the `Scroll_To_Recent.mq5` file into the Indicators folder.
 4. Refresh MetaTrader 5
    - Restart MetaTrader 5 or right-click in the Navigator window and select Refresh.
 
@@ -36,20 +38,18 @@ enhancing the user's chart navigation experience.
 
 1. Load the Script
    - Open MetaTrader 5.
-   - In the Navigator window, find the `ScrollToRecentButton` script under `Expert Advisors`.
-   - Drag and drop the `ScrollToRecentButton` script onto the chart where you want to use it.
+   - In the Navigator window, find the `Scroll_To_Recent` script under `Indicators`.
+   - Drag and drop the `Scroll_To_Recent` script onto the chart where you want to use it.
 2. Interact with the Button
    - The "Scroll to Recent" button will appear at the bottom-right corner of the chart when you scroll back.
    - Click the button to immediately scroll to the most recent bar.
    - The button will disappear automatically when the chart reaches the most recent bar.
 
-## Input Parameters
+## Inputs
 
-```markdown
-- `Position`: Specifies the position of the button on the chart. (Default is `CORNER_RIGHT_LOWER`)
-- `Button Color`: Specifies the background color of the button. (Default is `clrWhite`)
-- `Text Color`: Specifies the color of the button text. (Default is `clrBlack`)
-```
+- **Position**: Specifies the position of the button on the chart.
+- **Text Color**: Specifies the color of the button text.
+- **Button Color**: Specifies the background color of the button.
 
 ## Customization
 
@@ -57,36 +57,52 @@ You can customize the size and position of the x and y axes of the button by mod
 
 ```mql5
 #define BUTTON_NAME "ScrollToRecentButton"
+
 #define BUTTON_X_POSITION 50
 #define BUTTON_Y_POSITION 50
-#define BUTTON_WIDTH 25
-#define BUTTON_HEIGHT 25
+#define BUTTON_WIDTH      25
+#define BUTTON_HEIGHT     25
+
+Timeout(150); // Milliseconds
 ```
 
 ## Script Code
 Below is the MQL5 code used to create the "Scroll to Recent" button
 ```mql5
 //+------------------------------------------------------------------+
-//|                                         ScrollToRecentButton.mq5 |
-//|                                           Copyright 2024, FaceND |
-//|                       https://github.com/FaceND/Scroll-to-Recent |
+//|                                             Scroll_To_Recent.mq5 |
+//|                                         Copyright © 2024, FaceND |
+//|                       https://github.com/FaceND/Scroll_To_Recent |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2024, FaceND"
-#property link      "https://github.com/FaceND/Scroll-to-Recent"
-#property version   "1.0"
+#property copyright "Copyright © 2024, FaceND"
+#property link      "https://github.com/FaceND/Scroll_To_Recent"
+
+#property description "The ScrollToRecentButton indicator provides a convenient button"
+#property description "for quickly scrolling to the most recent data on the chart. It"
+#property description "enhances the user experience by allowing traders to easily"
+#property description "navigate to the latest price action without manually scrolling"
+#property description "through historical data." 
+
+#property indicator_plots 0
+#property indicator_chart_window
 
 #define BUTTON_NAME "ScrollToRecentButton"
 
 #define BUTTON_X_POSITION 50
 #define BUTTON_Y_POSITION 50
-#define BUTTON_WIDTH 25
-#define BUTTON_HEIGHT 25
+#define BUTTON_WIDTH      25
+#define BUTTON_HEIGHT     25
 
-input ENUM_BASE_CORNER positon = CORNER_RIGHT_LOWER;   // Position
-input color button_color = clrWhite;                   // Button Color
-input color text_color = clrBlack;                     // Text Color
+input group "POSITION"
+input ENUM_BASE_CORNER   positon       = CORNER_RIGHT_LOWER;   // Position
+
+input group "STYLE"
+input color              text_color    = clrBlack;             // Text Color
+input color              button_color  = clrWhite;             // Button Color
+
+bool autoScroll;
 //+------------------------------------------------------------------+
-//| Expert initialization function                                   |
+//| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
 int OnInit()
   {
@@ -94,15 +110,33 @@ int OnInit()
      {
       return(INIT_FAILED);
      }
+   autoScroll = ChartGetInteger(0, CHART_AUTOSCROLL);
    UpdateButtonVisibility();
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
-//| Expert deinitialization function                                 |
+//| Custom indicator deinitialization function                       |
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
   {
+   ChartSetInteger(0, CHART_AUTOSCROLL, autoScroll);
    ObjectDelete(0, BUTTON_NAME);
+  }
+//+------------------------------------------------------------------+
+//| Custom indicator iteration function                              |
+//+------------------------------------------------------------------+
+int OnCalculate(const int           rates_total,
+                const int       prev_calculated,
+                const datetime          &time[],
+                const double            &open[],
+                const double            &high[],
+                const double             &low[],
+                const double           &close[],
+                const long       &tick_volume[],
+                const long            &volume[],
+                const int             &spread[])
+  {
+   return(rates_total);
   }
 //+------------------------------------------------------------------+
 //| Chart event handler function                                     |
@@ -130,16 +164,18 @@ bool CreateButton()
       Print("Failed to create the button object: ", BUTTON_NAME);
       return(false);
      }
-   // Set button properties
+   //-- Set button properties
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_XDISTANCE, BUTTON_X_POSITION);
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_YDISTANCE, BUTTON_Y_POSITION);
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_XSIZE, BUTTON_WIDTH);
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_YSIZE, BUTTON_HEIGHT);
+   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_BACK, false);
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_BGCOLOR, button_color);
+   
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_BORDER_COLOR, button_color);
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_CORNER, positon);
 
-   // Set text properties
+   //-- Set text properties
    ObjectSetString (0, BUTTON_NAME, OBJPROP_TEXT, ">>");
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_COLOR, text_color);
    ObjectSetString (0, BUTTON_NAME,OBJPROP_FONT, "Arial Bold");
@@ -152,12 +188,13 @@ bool CreateButton()
 //+------------------------------------------------------------------+
 void UpdateButtonVisibility()
   {
+   ChartSetInteger(0, CHART_AUTOSCROLL, false);
+   Timeout(150);
    long firstVisibleBarIndex = ChartGetInteger(0, CHART_FIRST_VISIBLE_BAR);
    long visibleBarsCount = ChartGetInteger(0, CHART_VISIBLE_BARS)-1;
    if(firstVisibleBarIndex == visibleBarsCount)
      {
       ObjectDelete(0, BUTTON_NAME);
-      Sleep(250);
      }
    else
      {
@@ -166,6 +203,14 @@ void UpdateButtonVisibility()
          CreateButton();
         }
      }
+  }
+//+------------------------------------------------------------------+
+//| Function to execution for the given number of milliseconds       |
+//+------------------------------------------------------------------+
+void Timeout(double ms)
+  {
+   double timeWait = GetTickCount() + ms;
+   while(GetTickCount() < timeWait);
   }
 //+------------------------------------------------------------------+
 ```
