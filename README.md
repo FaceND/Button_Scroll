@@ -56,14 +56,10 @@ enhancing the user's chart navigation experience.
 You can customize the size and position of the x and y axes of the button by modifying the following defines in the script
 
 ```mql5
-#define BUTTON_NAME "ScrollToRecentButton"
-
 #define BUTTON_X_POSITION 50
 #define BUTTON_Y_POSITION 50
 #define BUTTON_WIDTH      25
 #define BUTTON_HEIGHT     25
-
-Timeout(150); // Milliseconds
 ```
 
 ## Script Code
