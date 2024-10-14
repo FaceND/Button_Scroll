@@ -65,7 +65,7 @@ You can customize the size and position of the x and y axes of the button by mod
 ## Script Code
 Below is the MQL5 code used to create the "Scroll to Recent" button
 ```mql5
-﻿//+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
 //|                                             Scroll_To_Recent.mq5 |
 //|                                         Copyright © 2024, FaceND |
 //|                       https://github.com/FaceND/Scroll_To_Recent |
@@ -95,30 +95,22 @@ input ENUM_BASE_CORNER   positon       = CORNER_RIGHT_LOWER;   // Position
 input group "STYLE"
 input color              text_color    = clrBlack;             // Text Color
 input color              button_color  = clrWhite;             // Button Color
-
-bool autoScroll;
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
 int OnInit()
   {
-   if(!CreateButton())
+   if(!UpdateButtonVisibility())
      {
-      return(INIT_FAILED);
+      return INIT_FAILED;
      }
-   autoScroll = ChartGetInteger(0, CHART_AUTOSCROLL);
-   
-   ChartSetInteger(0, CHART_AUTOSCROLL, false);
-   UpdateButtonVisibility();
-   
-   return(INIT_SUCCEEDED);
+   return INIT_SUCCEEDED;
   }
 //+------------------------------------------------------------------+
 //| Custom indicator deinitialization function                       |
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
   {
-   ChartSetInteger(0, CHART_AUTOSCROLL, autoScroll);
    ObjectDelete(0, BUTTON_NAME);
   }
 //+------------------------------------------------------------------+
@@ -135,7 +127,7 @@ int OnCalculate(const int           rates_total,
                 const long            &volume[],
                 const int             &spread[])
   {
-   return(rates_total);
+   return rates_total;
   }
 //+------------------------------------------------------------------+
 //| Chart event handler function                                     |
@@ -160,7 +152,7 @@ bool CreateButton()
    if(!ObjectCreate(0, BUTTON_NAME, OBJ_BUTTON, 0, 0, 0))
      {
       Print("Failed to create the button object: ", BUTTON_NAME);
-      return(false);
+      return false;
      }
    //-- Set button properties
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_XDISTANCE,    BUTTON_X_POSITION);
@@ -178,19 +170,19 @@ bool CreateButton()
    ObjectSetString (0, BUTTON_NAME, OBJPROP_FONT,         "Arial Bold");
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_COLOR,        text_color);
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_FONTSIZE,     12);
-
-   return(true);
+   
+   return true;
   }
 //+------------------------------------------------------------------+
 //| Function to update button visibility based on chart position     |
 //+------------------------------------------------------------------+
-void UpdateButtonVisibility()
+bool UpdateButtonVisibility()
   {
    // Check if autoscroll is disabled
    if(!ChartGetInteger(0, CHART_AUTOSCROLL))
      {
       Timeout(150);
-      
+
       long firstVisibleBarIndex = ChartGetInteger(0, CHART_FIRST_VISIBLE_BAR);
       long visibleBarsCount = ChartGetInteger(0, CHART_VISIBLE_BARS)-1;
 
@@ -202,15 +194,19 @@ void UpdateButtonVisibility()
         {
          if(ObjectFind(0, BUTTON_NAME) == -1)
            {
-            CreateButton();
+            return CreateButton();
            }
         }
      }
    else
      {
       ChartNavigate(0, CHART_END);
-      ObjectDelete(0, BUTTON_NAME);
+      if(ObjectFind(0, BUTTON_NAME) == 0)
+        {
+         ObjectDelete(0, BUTTON_NAME);
+        }
      }
+   return true;
   }
 //+------------------------------------------------------------------+
 //| Function to execution for the given number of milliseconds       |
