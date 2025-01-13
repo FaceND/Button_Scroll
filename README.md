@@ -90,8 +90,8 @@ Below is the MQL5 code used to create the "Button Scroll" button
 #define BUTTON_HEIGHT     25
 
 input group "STYLE"
-input color              buttonColor  = clrWhite;    // Button color
-input color              textColor    = clrBlack;    // Text color
+input color  buttonColor  = clrWhite;    // Button color
+input color  textColor    = clrBlack;    // Text color
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
