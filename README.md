@@ -92,6 +92,11 @@ Below is the MQL5 code used to create the "Button Scroll" button
 input group "STYLE"
 input color  buttonColor  = clrWhite;    // Button color
 input color  textColor    = clrBlack;    // Text color
+
+bool button_active = false;
+
+bool timeout_active = false;
+double time_wait = 0.0;
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
@@ -138,7 +143,8 @@ void OnChartEvent(const int                 id,
    if(id == CHARTEVENT_OBJECT_CLICK && sparam == BUTTON_NAME)
      {
       ChartNavigate(0, CHART_END);
-      HideButton(0, BUTTON_NAME);
+      HideButton();
+      button_active = false;
      }
    if(id == CHARTEVENT_CHART_CHANGE || id == CHARTEVENT_MOUSE_WHEEL)
      {
@@ -176,7 +182,7 @@ bool CreateButton()
       ObjectSetInteger(0, BUTTON_NAME, OBJPROP_BORDER_COLOR, buttonColor);
      }
 
-   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_CORNER,       CORNER_RIGHT_LOWER); 
+   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_CORNER,       CORNER_RIGHT_LOWER);
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_ZORDER,       100);
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_BACK,         false);
 
@@ -197,39 +203,58 @@ void UpdateButton()
    // Check if autoscroll is disabled
    if(!ChartGetInteger(0, CHART_AUTOSCROLL))
      {
-      // Timeout(150);
-      long firstVisibleBarIndex = ChartGetInteger(0, CHART_FIRST_VISIBLE_BAR);
-      long visibleBarsCount     = ChartGetInteger(0, CHART_VISIBLE_BARS)-1;
-
-      if(firstVisibleBarIndex == visibleBarsCount)
-         HideButton(0, BUTTON_NAME);
-         
-      else
-         ShowButton(0, BUTTON_NAME);
+      Timeout(150);
+      if(timeout_active)
+        {
+         //+---------------------------------------------------------+
+         long firstVisibleBarIndex = ChartGetInteger(0,
+                                       CHART_FIRST_VISIBLE_BAR);
+         long visibleBarsCount     = ChartGetInteger(0,
+                                       CHART_VISIBLE_BARS)-1;
+         //+---------------------------------------------------------+
+         if(firstVisibleBarIndex == visibleBarsCount)
+           { 
+            HideButton();
+            button_active = false;
+           }
+         else
+           {
+            if(!button_active)
+              {
+               ShowButton();
+               button_active = true;
+              }
+           }
+        }
      }
    else
      {
       ChartNavigate(0, CHART_END);
-      HideButton(0, BUTTON_NAME);
+      if(button_active)
+        {
+         HideButton();
+         button_active = false;
+        }
      }
   }
 //+------------------------------------------------------------------+
 //| Function to hide button on the chart                             |
 //+------------------------------------------------------------------+
-void HideButton(long chart_id, string object_name) 
+void HideButton()
   {
-   ObjectSetInteger(chart_id, object_name, OBJPROP_XDISTANCE, -100);
-   ObjectSetInteger(chart_id, object_name, OBJPROP_YDISTANCE, -100);
+   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_XDISTANCE, INT_MAX);
+   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_YDISTANCE, INT_MAX);
    
    ChartRedraw();
   }
 //+------------------------------------------------------------------+
 //| Function to show button on the chart                             |
 //+------------------------------------------------------------------+
-void ShowButton(long chart_id, string object_name) 
+void ShowButton() 
   {
-   ObjectSetInteger(chart_id, object_name, OBJPROP_XDISTANCE, BUTTON_X_POSITION);
-   ObjectSetInteger(chart_id, object_name, OBJPROP_YDISTANCE, BUTTON_Y_POSITION);
+   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_XDISTANCE, BUTTON_X_POSITION);
+   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_YDISTANCE, BUTTON_Y_POSITION);
+   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_STATE, false);
    
    ChartRedraw();
   }
@@ -238,8 +263,19 @@ void ShowButton(long chart_id, string object_name)
 //+------------------------------------------------------------------+
 void Timeout(double ms)
   {
-   double timeWait = GetTickCount() + ms;
-   while(GetTickCount() < timeWait);
+   if(!timeout_active)
+     {
+      time_wait = GetTickCount() + ms;
+      timeout_active = true;
+     }
+   // while(GetTickCount() < timeWait);
+   else
+     {
+      if(GetTickCount() > time_wait)
+         {
+         timeout_active = false;
+         }
+     }
   }
 //+------------------------------------------------------------------+
 ```
