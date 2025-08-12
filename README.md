@@ -102,6 +102,7 @@ double time_wait = 0.0;
 //+------------------------------------------------------------------+
 int OnInit()
   {
+   EventSetMillisecondTimer(500);
    if(!CreateButton())
      {
       return INIT_FAILED;
@@ -113,8 +114,16 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
   {
+   EventKillTimer();
    ObjectDelete(0, BUTTON_NAME);
    ChartRedraw();
+  }
+//+------------------------------------------------------------------+
+//| Custom indicator Timer function                                  |
+//+------------------------------------------------------------------+
+void OnTimer()
+  {
+   UpdateButton();
   }
 //+------------------------------------------------------------------+
 //| Custom indicator iteration function                              |
@@ -148,7 +157,9 @@ void OnChartEvent(const int                 id,
      }
    if(id == CHARTEVENT_CHART_CHANGE || id == CHARTEVENT_MOUSE_WHEEL)
      {
+      EventKillTimer();
       UpdateButton();
+      EventSetMillisecondTimer(500);
      }
   }
 //+------------------------------------------------------------------+
@@ -203,8 +214,8 @@ void UpdateButton()
    // Check if autoscroll is disabled
    if(!ChartGetInteger(0, CHART_AUTOSCROLL))
      {
-      Timeout(150);
-      if(timeout_active)
+      Timeout(250);
+      if(!timeout_active)
         {
          //+---------------------------------------------------------+
          long firstVisibleBarIndex = ChartGetInteger(0,
@@ -263,18 +274,19 @@ void ShowButton()
 //+------------------------------------------------------------------+
 void Timeout(double ms)
   {
+   uint tick = GetTickCount();
    if(!timeout_active)
      {
-      time_wait = GetTickCount() + ms;
+      time_wait = tick + ms;
       timeout_active = true;
      }
    // while(GetTickCount() < timeWait);
    else
      {
-      if(GetTickCount() > time_wait)
-         {
+      if(tick > time_wait)
+        {
          timeout_active = false;
-         }
+        }
      }
   }
 //+------------------------------------------------------------------+
