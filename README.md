@@ -90,13 +90,10 @@ Below is the MQL5 code used to create the "Button Scroll" button
 #define BUTTON_HEIGHT     25
 
 input group "STYLE"
-input color  buttonColor  = clrWhite;    // Button color
-input color  textColor    = clrBlack;    // Text color
+input color  buttonColor  = clrWhite;   // Button color
+input color  textColor    = clrBlack;   // Text color
 
 bool button_active = false;
-
-bool timeout_active = false;
-double time_wait = 0.0;
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
@@ -151,15 +148,7 @@ void OnChartEvent(const int                 id,
   {
    if(id == CHARTEVENT_OBJECT_CLICK && sparam == BUTTON_NAME)
      {
-      ChartNavigate(0, CHART_END);
-      HideButton();
-      button_active = false;
-     }
-   if(id == CHARTEVENT_CHART_CHANGE || id == CHARTEVENT_MOUSE_WHEEL)
-     {
-      EventKillTimer();
-      UpdateButton();
-      EventSetMillisecondTimer(500);
+      ScrollToEnd();
      }
   }
 //+------------------------------------------------------------------+
@@ -192,7 +181,7 @@ bool CreateButton()
       ObjectSetInteger(0, BUTTON_NAME, OBJPROP_BGCOLOR,      buttonColor);
       ObjectSetInteger(0, BUTTON_NAME, OBJPROP_BORDER_COLOR, buttonColor);
      }
-
+   //--- Set Object properties
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_CORNER,       CORNER_RIGHT_LOWER);
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_ZORDER,       100);
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_BACK,         false);
@@ -203,7 +192,6 @@ bool CreateButton()
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_COLOR,        textColor);
    ObjectSetInteger(0, BUTTON_NAME, OBJPROP_FONTSIZE,     12);
 
-   UpdateButton();
    return true;
   }
 //+------------------------------------------------------------------+
@@ -211,52 +199,46 @@ bool CreateButton()
 //+------------------------------------------------------------------+
 void UpdateButton()
   {
-   // Check if autoscroll is disabled
+   ResetLastError();
+   //--- Check if autoscroll is disabled
    if(!ChartGetInteger(0, CHART_AUTOSCROLL))
      {
-      Timeout(250);
-      if(!timeout_active)
+      //+------------------------------------------------------------+
+      long firstVisibleBarIndex = ChartGetInteger(0,
+                                    CHART_FIRST_VISIBLE_BAR);
+      long visibleBarsCount     = ChartGetInteger(0,
+                                    CHART_VISIBLE_BARS)-1;
+      //+------------------------------------------------------------+
+      if(firstVisibleBarIndex == visibleBarsCount)
+        { 
+         HideButton();
+         button_active = false;
+        }
+      else
         {
-         //+---------------------------------------------------------+
-         long firstVisibleBarIndex = ChartGetInteger(0,
-                                       CHART_FIRST_VISIBLE_BAR);
-         long visibleBarsCount     = ChartGetInteger(0,
-                                       CHART_VISIBLE_BARS)-1;
-         //+---------------------------------------------------------+
-         if(firstVisibleBarIndex == visibleBarsCount)
-           { 
-            HideButton();
-            button_active = false;
-           }
-         else
+         if(!button_active)
            {
-            if(!button_active)
-              {
-               ShowButton();
-               button_active = true;
-              }
+            ShowButton();
+            button_active = true;
            }
         }
      }
    else
      {
-      ChartNavigate(0, CHART_END);
-      if(button_active)
-        {
-         HideButton();
-         button_active = false;
-        }
+      ScrollToEnd();
      }
   }
 //+------------------------------------------------------------------+
-//| Function to hide button on the chart                             |
+//| Function to scroll the chart to the end                          |
 //+------------------------------------------------------------------+
-void HideButton()
+void ScrollToEnd()
   {
-   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_XDISTANCE, INT_MAX);
-   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_YDISTANCE, INT_MAX);
-   
-   ChartRedraw();
+   ChartNavigate(0, CHART_END);
+   if(button_active)
+     {
+      HideButton();
+      button_active = false;
+     }
   }
 //+------------------------------------------------------------------+
 //| Function to show button on the chart                             |
@@ -270,24 +252,14 @@ void ShowButton()
    ChartRedraw();
   }
 //+------------------------------------------------------------------+
-//| Function to execution for the given number of milliseconds       |
+//| Function to hide button on the chart                             |
 //+------------------------------------------------------------------+
-void Timeout(double ms)
+void HideButton()
   {
-   uint tick = GetTickCount();
-   if(!timeout_active)
-     {
-      time_wait = tick + ms;
-      timeout_active = true;
-     }
-   // while(GetTickCount() < timeWait);
-   else
-     {
-      if(tick > time_wait)
-        {
-         timeout_active = false;
-        }
-     }
+   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_XDISTANCE, INT_MAX);
+   ObjectSetInteger(0, BUTTON_NAME, OBJPROP_YDISTANCE, INT_MAX);
+   
+   ChartRedraw();
   }
 //+------------------------------------------------------------------+
 ```
